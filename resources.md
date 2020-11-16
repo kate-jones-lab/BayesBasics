@@ -38,8 +38,9 @@ Resources that are available online. This list is maintained by members of the K
 * [Statistical Rethinking v2](https://learning.oreilly.com/library/view/statistical-rethinking/9781482253481/) the full book is available here with UCL login. Otherwise it can be found as a pdf from other sources.
   * [Video lectures](https://xcelab.net/rm/statistical-rethinking/)
   * [Practical sections](https://bookdown.org/ajkurz/Statistical_Rethinking_recoded/) using brms, ggplot2 and tidyverse
-* [Bayesian Data Analysis](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) Updated version of the book by Gelman & co.
+* [Bayesian Data Analysis](http://www.stat.columbia.edu/~gelman/book/BDA3.pdf) Updated version of the book by Andrew Gelman & co.
 * [A Bayesian approach to statistics](https://dpsimpson.github.io/pages/talks/Bayesian_Workflow.pdf) a workflow from Dan Simpson and others.
+* [Visualization in Bayesian workflow](https://rss.onlinelibrary.wiley.com/doi/full/10.1111/rssa.12378) including a worked example. R code implemented in the package _bayesplot_.
 * [Constructing priors](https://projecteuclid.org/euclid.ss/1491465621) another one by Dan Simpson and co.
 * Bayesian model selection/validation: [Conn et al. 2018](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecm.1314), [Vehtari et al. 2017](https://link.springer.com/article/10.1007/s11222-016-9696-4), [Hooten & Hobbs 2015](https://esajournals.onlinelibrary.wiley.com/doi/10.1890/14-0661.1) 
 * [brms](https://cran.r-project.org/web/packages/brms/brms.pdf): An R Package for Bayesian Multilevel Models using Stan

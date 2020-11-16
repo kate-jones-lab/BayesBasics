@@ -40,7 +40,7 @@ Resources that are available online. This list is maintained by members of the K
   * [Practical sections](https://bookdown.org/ajkurz/Statistical_Rethinking_recoded/) using brms, ggplot2 and tidyverse
 * [A Bayesian approach to statistics](https://dpsimpson.github.io/pages/talks/Bayesian_Workflow.pdf) a workflow from Dan Simpson and others.
 * [Constructing priors](https://projecteuclid.org/euclid.ss/1491465621) another one by Dan Simpson and co.
-* Bayesian model validation/selection: [Conn et al. 2018](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecm.1314), [Vehtari et al. 2017](https://link.springer.com/article/10.1007/s11222-016-9696-4), [Hooten & Hobbs 2015](https://esajournals.onlinelibrary.wiley.com/doi/10.1890/14-0661.1) 
+* Bayesian model selection/validation: [Conn et al. 2018](https://esajournals.onlinelibrary.wiley.com/doi/full/10.1002/ecm.1314), [Vehtari et al. 2017](https://link.springer.com/article/10.1007/s11222-016-9696-4), [Hooten & Hobbs 2015](https://esajournals.onlinelibrary.wiley.com/doi/10.1890/14-0661.1) 
 * [brms](https://cran.r-project.org/web/packages/brms/brms.pdf): An R Package for Bayesian Multilevel Models using Stan
   * [online Stan forum](https://discourse.mc-stan.org/) and [other resources](https://mc-stan.org/users/interfaces/brms)
 * [Approximate Bayesian Computing (ABC)](https://arxiv.org/abs/1802.09720) - easy as ABC! That's why we need so many tutorials like [this](https://www.sciencedirect.com/science/article/pii/S0025556416300839?via%3Dihub) or [this](https://www.sciencedirect.com/science/article/pii/S0022249612000272).

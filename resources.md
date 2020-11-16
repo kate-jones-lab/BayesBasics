@@ -34,6 +34,7 @@ Resources that are available online. This list is maintained by members of the K
 
 * Why bother with Bayesian?
   * [paper](https://www.tandfonline.com/doi/full/10.1080/00031305.2018.1527253) and [associated comment](https://www.nature.com/articles/d41586-019-00857-9)
+* [Probability and Bayesian Modeling](https://bayesball.github.io/BOOK/probability-a-measurement-of-uncertainty.html) 2020 bookdown version
   
 * [Statistical Rethinking v2](https://learning.oreilly.com/library/view/statistical-rethinking/9781482253481/) the full book is available here with UCL login. Otherwise it can be found as a pdf from other sources.
   * [Video lectures](https://xcelab.net/rm/statistical-rethinking/)

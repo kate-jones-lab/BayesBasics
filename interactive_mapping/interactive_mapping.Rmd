@@ -1,0 +1,153 @@
+---
+title: "Interactive mapping using mapview, leaflet and tmap"
+author: "David Simons"
+date: "07/05/2021"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_depth: 4
+    toc_float: true
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, cache = F)
+```
+
+## Interactive mapping examples
+
+This follows on from a methods group meeting where we discussed different methods of spatial visualisation using the [`tmap`](https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html) package and it's link to the r [`leaflet`](https://rstudio.github.io/leaflet/) package alongside [`mapview`](https://r-spatial.github.io/mapview/index.html).
+
+For this example I will use the data obtained from a rodent trapping pilot study. It is stored in the `data` folder as an RDS file and convert it to an [`sf`](https://r-spatial.github.io/sf/) object. 
+
+The most useful way to view this is to probably clone the repository and compile the rmd on your own computer.
+
+```{r install-packages}
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load("here",
+               "tidyverse",
+               "sf",
+               "tmap",
+               "leaflet",
+               "leafpop",
+               "htmltools",
+               "htmlwidgets",
+               "mapview")
+
+#remotes::install_github("r-spatial/mapview")
+```
+
+#### Spatial data
+
+I am currently using SF for my spatial data but there are other options. As the data we are using has associated geometry it can be plotted in its current format using `plot()`. This gives us an idea of where the points are in space but is rather limited and doesn't tell us anything else.
+
+
+
+```{r simple-plot}
+sites <- readRDS(here("interactive_mapping", "data", "lalehun_traps.rds")) %>%
+  bind_rows(readRDS(here("interactive_mapping", "data", "seilama_traps.rds"))) %>%
+  st_as_sf()
+
+plot(sites$geometry)
+```
+
+### Rapid visualisation
+
+
+If you want to readily explore your data without further processing you can using `leaflet` or `mapview`. Mapview seems to be an `r` specific implementation using leaflet. My understanding is that leaflet is highly customisable while mapview is currently more limited but is a great starting point for exploring your data.
+
+#### Leaflet
+
+```{r leaflet}
+leaflet(data = sites) %>%
+  addProviderTiles(providers$Esri.WorldImagery) %>%
+  addCircles()
+```
+
+
+This first map is from leaflet. It helps us know that our CRS is associating the points with the right part of the world but is not useful for much else. Mapview however, (below) allows us to click on any point in the map and it will give the information about that entry.
+
+
+#### Mapview
+
+
+Mapview is a package that is being continually developed and it seems that this will be a nice package to tie into SF objects or STARS for raster data. It is very similar to leaflet but perhaps a bit more user friendly if you already have experience with R
+
+``` {r mapview}
+mapviewOptions(fgb = FALSE)
+mapview(sites,
+        zcol = "rodent_trapped")
+```
+
+##### Managing layers
+
+Another nice thing to do when exploring your data is the use of layers. For my data we have taken repeated observations at the same geographic points so plotting all 4 days of data collection on the same map can obscure the detail. By splitting my dataset up into nightly observations and passing each of those to mapview I can explore daily captures by selecting the layer I'm interested in from the panel on the left.
+
+The popups can be made more concise with selection of the interesting columns using the `popupTable()` function from `leafpops()`.
+
+
+``` {r mapview-layer}
+lalehun_d1 <- sites %>%
+  filter(trap_night == 1 & village == "lalehun")
+lalehun_d2 <- sites %>%
+  filter(trap_night == 2 & village == "lalehun")
+lalehun_d3 <- sites %>%
+  filter(trap_night == 3 & village == "lalehun")
+lalehun_d4 <- sites %>%
+  filter(trap_night == 4 & village == "lalehun")
+
+
+mapview(lalehun_d1,
+        zcol = "rodent_trapped",
+        popup = popupTable(lalehun_d1, zcol = c("date_set",
+                                    "habitat",
+                                    "trap_number",
+                                    "rodent_id"))) +
+  mapview(lalehun_d2,
+        zcol = "rodent_trapped",
+        popup = popupTable(lalehun_d2, zcol = c("date_set",
+                                    "habitat",
+                                    "trap_number",
+                                    "rodent_id"))) +
+  mapview(lalehun_d3,
+        zcol = "rodent_trapped",
+        popup = popupTable(lalehun_d3, zcol = c("date_set",
+                                    "habitat",
+                                    "trap_number",
+                                    "rodent_id"))) +
+  mapview(lalehun_d4,
+        zcol = "rodent_trapped",
+        popup = popupTable(lalehun_d4, zcol = c("date_set",
+                                    "habitat",
+                                    "trap_number",
+                                    "rodent_id")))
+```
+
+#### tmap
+
+Finally tmap can be used this uses a similar approach to ggplot but for maps. There are two modes to this the plot and the view. Plot makes nice images that can be used for manuscripts and reports while view is great for online or exploration of your data like mapview.
+
+```{r tmap}
+tmap_mode("view")
+
+tm_shape(sites) +
+  tm_dots()
+
+tmap_mode("plot")
+SLE <- read_rds(here("interactive_mapping", "data", "gadm36_SLE_2_sp.rds")) %>%
+  st_as_sf() %>%
+  filter(NAME_2 == "Kenema")
+
+tm_shape(SLE) +
+  tm_polygons() +
+  tm_shape(sites) +
+  tm_dots() +
+  tm_compass() +
+  tm_scale_bar() +
+  tm_layout(main.title = "Locations of rodent traps in Kenema 
+District, Sierra Leone",
+            main.title.size = 0.8)
+```
+

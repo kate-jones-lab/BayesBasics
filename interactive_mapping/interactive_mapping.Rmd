@@ -151,3 +151,6 @@ District, Sierra Leone",
             main.title.size = 0.8)
 ```
 
+### Further examples
+
+I have used a similar approach on another project, it is less step by step but is fairly well commented and hopefully the code can be followed. The [code](https://github.com/thibautjombart/nhs_pathways_monitoring/blob/master/analyses-ccg.Rmd) and [website](https://covid19-nhs-pathways-asmodee.netlify.app/analyses-ccg.html) give you some idea about what can be done with interactive mapping with polygons rather than datapoints.

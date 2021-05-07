@@ -1,0 +1,142 @@
+---
+title: "Manipulating and visualising rasters in R"
+author: "David Simons"
+date: "07/05/2021"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_depth: 4
+    toc_float: true
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, cache = F)
+```
+
+A recent paper by [Jung et al. 2020](https://doi.org/10.1038/s41597-020-00599-8) used machine learning approaches to categorise global land use based on the International Union for Conservation of Nature and Natural Resources (IUCN) habitats classification scheme ([v3.1](https://www.iucnredlist.org/resources/habitat-classification-scheme)). The associated repository for their work is available [here](https://github.com/Martin-Jung/Habitatmapping). Their [Zenodo](https://zenodo.org/record/4058819) contains the full dataset but for this we're just going to use a small part of it based around my study sites in Sierra Leone. 
+
+```{r start-up}
+if (!require("pacman")) install.packages("pacman")
+
+pacman::p_load("here", # helps organise the files
+               "tidyverse", # gives us the pipe and other helpful functions
+               "stars", # handles the raster
+               "raster", # possibly this can be done with either raster or stars only
+               "sf", 
+               "tmap",
+               "xml2",
+               "rvest")
+
+coords <- bind_rows(c(village = "Lalehun", long = -11.0803, lat = 8.197533),
+                    c(village = "Seilama", long = -11.193628469657279, lat = 8.122285428353395)) %>%
+  st_as_sf(coords = c("long", "lat"), crs = 4326) %>%
+  st_transform(2162)
+```
+
+## Managing your Raster
+
+I have produced an `.Rds` of the landuse of Kenema, the district that my study sites lie within from the original `.tiff` raster. The process I went through is shown in the code below but this won't work out of the box as the original files where around 2.5gb and so are not attached to this repository. You should be able to replicate the process though if required. Once the raster is loaded it can be plotted.
+
+```{r croping-raster}
+# landuse <- raster(here("data", "satellite", "landuse.tif")) # this is the complete global 2.5Gb tiff
+
+# SLE_2 is a shape file of Sierra Leone down to level 2 districts. This crops the raster to the district of Kenema
+# landuse_sl <- crop(landuse, SLE_2 %>%
+#                      filter(NAME_2 == "Kenema"))
+# landuse_sl <- mask(landuse_sl, SLE_2 %>%
+#                      filter(NAME_2 == "Kenema"))
+# write_rds(landuse_sl, here("data", "satellite", "sierra_leone_landuse.rds"))
+
+kenema_landuse <- read_rds(here("raster_fun", "data", "kenema_landuse.rds"))
+
+plot(kenema_landuse)
+```
+
+
+As I'm sure you know a raster is a effectively a photo. It is a dataframe with a value at each point of it's resolution that is comprised of RGB and gives the total score we see here which is why it goes up to 1400. These values are kind of meaningless though without a key. Fortunately the dataset comes with an associated legend. This is stored in a `.qml` file which I think comes from either ArcGIS or QGIS. To get this into `R` we rely on it being effectively an `.xml` file. 
+
+## Manipulating your Raster
+ 
+The first step is to convert our raster into a dataframe. We then import the .qml file turning it into another dataframe. We then join these two dataframes which turns the numbers into labels. If we print the raster at this stage it isn't massively different, the difference in visuals is because it is now a `stars` object and the default plotting is slightly different.
+
+```{r import-qml}
+
+kenema_landuse <- as.data.frame(kenema_landuse, xy = T)
+
+labels_raster <- xml2::read_xml(here("raster_fun", "data", "lvl2_style.qml")) %>%
+  rvest::html_nodes('paletteEntry') %>%
+  {data.frame(value = rvest::html_attr(.,'value'),
+              label = rvest::html_attr(.,'label'))} %>%
+  dplyr::mutate(value = readr::parse_number(as.character(value)))
+
+kenema_landuse <- kenema_landuse %>%
+  left_join(., labels_raster %>%
+              rename("landuse" = "value"),
+            by = "landuse")
+  
+kenema_raster <- kenema_landuse %>%
+  st_as_sf(coords = c("x", "y")) %>%
+  st_rasterize()
+
+plot(kenema_raster)
+```
+
+## Visualising the Raster
+
+This can however be improved. I have only managed to do this next bit as a manual process but I'm sure it can be better automated. By using `distinct()` I can identify the different land use labels associated with the values on the raster. Currently there are only 13. If I was using a larger raster these can very quickly become too large and so you may want to use higher level groupings. This can be done manually with normal data management in R. For ease of interpreting I will shorten some of these labels, for example all of the land is in the subtropical/tropical region so I can remove that. I also used named vectors to assign specific colours to these labels in the palette argument of `tm_raster`.
+
+```{r sorting-colours}
+kenema_landuse %>%
+  distinct(label) %>%
+  pull()
+
+labels_sle <- c("Shrubland",
+                "Plantations", "Forest - lowland",
+                "Pastureland", "Forest - montane",
+                "Shrubland - montane", "Urban areas",
+                "Wetlands", "Forest - swamp", 
+                "Rural gardens", "Arable land",
+                "Wetlands - seasonal")
+
+names(labels_sle) <- c("Shrubland - Subtropical-tropical moist", "Plantations", "Forest - Subtropical-tropical moist lowland", "Pastureland",
+                       "Forest - Subtropical-tropical moist montane", "Shrubland - Subtropical-tropical high altitude", "Urban Areas",
+                       "Wetlands (inland)", "Forest - Subtropical-tropical swamp", "Rural Gardens", "Arable land",
+                       "Wetlands (inland) - Seasonal/intermittent/irregular rivers/streams/creeks")
+
+ras_palette_sle <- c("#d9d9d9", "#00441b", "#006d2c", "#238b45",
+                     "#99d8c9", "#ccece6", "#045a8d", "#a6bddb",
+                     "#fee391", "#fec44f", "#ec7014", "#662506",
+                     "#7a0177")
+names(ras_palette_sle) <- c("Missing", "Forest - lowland",
+                            "Forest", "Forest - montane",
+                            "Shrubland", "Shrubland - montane",
+                            "Wetlands", "Wetlands - seasonal",
+                            "Arable land", "Pastureland",
+                            "Plantations", "Rural gardens",
+                            "Urban areas")
+
+cleaned_labels <- as.data.frame(kenema_landuse, xy = T) %>%
+  mutate(label = recode(label, !!!labels_sle))
+
+break_values <- cleaned_labels %>%
+  distinct(label, landuse) %>%
+  arrange(landuse)
+break_values <- setNames(as.character(break_values$landuse), break_values$label)
+
+cleaned_labels <- cleaned_labels %>%
+  st_as_sf(coords = c("x", "y")) %>%
+  st_rasterize()
+
+tm_shape(cleaned_labels) +
+  tm_raster(col = "landuse",
+            breaks = c(0, as.numeric(break_values)[1:12], 1600),
+            labels = c("Missing", names(break_values)[1:12]),
+            palette = ras_palette_sle,
+            title = "Land use") +
+  tm_layout(legend.outside = T) +
+  tm_compass(position = c("right", "top")) +
+  tm_scale_bar(position = c("right", "bottom"))
+```
+
